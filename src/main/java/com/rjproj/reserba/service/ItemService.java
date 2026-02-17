@@ -18,6 +18,26 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
 
+    public ItemDto saveItem(ItemDto itemDto) {
+        Item item = new Item(
+                null,
+                itemDto.name(),
+                itemDto.description(),
+                itemDto.price(),
+                itemDto.imageUrl(),
+                "new Catergory"
+        );
+        Item savedItem = itemRepository.save(item);
+
+        return new ItemDto(
+                savedItem.getId().toString(),
+                savedItem.getName(),
+                savedItem.getDescription(),
+                savedItem.getPrice(),
+                savedItem.getImageUrl()
+        );
+    }
+
     public List<ItemDto> getItems() {
         List<Item> items = itemRepository.findAll();
 
@@ -41,71 +61,6 @@ public class ItemService {
                 item.getDescription(),
                 item.getPrice(),
                 item.getImageUrl()
-        );
-    }
-
-    public List<String> getCategories() {
-        return itemRepository.findAllCategories();
-    }
-
-    public BigDecimal getSumPricePerCategory(String category) {
-        List<Item> items = itemRepository.findAll();
-        return items.stream()
-                .filter(item -> category.equals(item.getCategory()))
-                .map(Item::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-//        return items.stream()
-//                .filter(item -> category.equals(item.getCategory()))
-//                .mapToDouble(Item::getPrice)
-//                .sum();
-    }
-
-    public List<ItemDto> filterByCategories(List<String> categories) {
-        List<Item> items = itemRepository.findAll();
-
-        return items.stream()
-                .filter(item -> categories.contains(item.getCategory()))
-                .map(itemFiltered -> new ItemDto(
-                        itemFiltered.getId().toString(),
-                        itemFiltered.getName(),
-                        itemFiltered.getDescription(),
-                        itemFiltered.getPrice(),
-                        itemFiltered.getImageUrl()
-                )).toList();
-    }
-
-    public Map<String, BigDecimal> getSumCategories() {
-        List<Item> items = itemRepository.findAll();
-        Map<String, BigDecimal> totals = items.stream()
-                .collect(Collectors.groupingBy(
-                       Item::getCategory,
-                       Collectors.reducing(
-                               BigDecimal.ZERO,
-                               Item::getPrice,
-                               BigDecimal::add
-                       )
-                       // Collectors.summingDouble(Product::getPrice)  // if double
-                ));
-        return totals;
-    }
-
-    public ItemDto saveItem(ItemDto itemDto) {
-        Item item = new Item(
-                null,
-                itemDto.name(),
-                itemDto.description(),
-                itemDto.price(),
-                itemDto.imageUrl(),
-                "new Catergory"
-        );
-        Item savedItem = itemRepository.save(item);
-
-        return new ItemDto(
-                savedItem.getId().toString(),
-                savedItem.getName(),
-                savedItem.getDescription(),
-                savedItem.getPrice(),
-                savedItem.getImageUrl()
         );
     }
 
@@ -139,20 +94,53 @@ public class ItemService {
         itemRepository.delete(item);
     }
 
-    public List<ItemDto> searchItems(BigDecimal price, String category) {
-        List<Item> items = itemRepository.findByCategoryAndPriceLessThanEqual(category,price);
+    // --------------------- NON CRUD -------------------------
+    public List<ItemDto> filterItemsByCategories(List<String> categories) {
+        List<Item> items = itemRepository.findAll();
 
         return items.stream()
-                .map(item -> new ItemDto(
-                        item.getId().toString(),
-                        item.getName(),
-                        item.getDescription(),
-                        item.getPrice(),
-                        item.getImageUrl()
+                .filter(item -> categories.contains(item.getCategory()))
+                .map(itemFiltered -> new ItemDto(
+                        itemFiltered.getId().toString(),
+                        itemFiltered.getName(),
+                        itemFiltered.getDescription(),
+                        itemFiltered.getPrice(),
+                        itemFiltered.getImageUrl()
                 )).toList();
     }
 
+    public List<String> getCategories() {
+        return itemRepository.findAllCategories();
+    }
 
+    public BigDecimal getSumPriceOfCategory(String category) {
+        List<Item> items = itemRepository.findAll();
+        return items.stream()
+                .filter(item -> category.equals(item.getCategory()))
+                .map(Item::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//        return items.stream()
+//                .filter(item -> category.equals(item.getCategory()))
+//                .mapToDouble(Item::getPrice)
+//                .sum();
+    }
+
+    public Map<String, BigDecimal> getSumPriceOfCategories() {
+        List<Item> items = itemRepository.findAll();
+        Map<String, BigDecimal> totals = items.stream()
+                .collect(Collectors.groupingBy(
+                       Item::getCategory,
+                       Collectors.reducing(
+                               BigDecimal.ZERO,
+                               Item::getPrice,
+                               BigDecimal::add
+                       )
+                       // Collectors.summingDouble(Product::getPrice)  // if double
+                ));
+        return totals;
+    }
+
+    // ---------------------
     public List<ItemDto> searchItemByName(String name) {
         List<Item> items = itemRepository.findByNameContainingIgnoreCase(name);
 
@@ -165,6 +153,19 @@ public class ItemService {
                         item.getImageUrl()
                 )).toList();
 
+    }
+
+    public List<ItemDto> searchItems(BigDecimal price, String category) {
+        List<Item> items = itemRepository.findByCategoryAndPriceLessThanEqual(category,price);
+
+        return items.stream()
+                .map(item -> new ItemDto(
+                        item.getId().toString(),
+                        item.getName(),
+                        item.getDescription(),
+                        item.getPrice(),
+                        item.getImageUrl()
+                )).toList();
     }
 
 }
