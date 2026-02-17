@@ -1,7 +1,6 @@
 package com.rjproj.reserba.controller;
 
 import com.rjproj.reserba.dto.ItemDto;
-import com.rjproj.reserba.model.Item;
 import com.rjproj.reserba.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -36,12 +36,22 @@ public class ItemController {
         return ResponseEntity.ok(itemService.getSumPricePerCategory(category));
     }
 
+    @GetMapping("/sumCategories")
+    public ResponseEntity<Map<String, BigDecimal>> getSumCategories() {
+        return ResponseEntity.ok(itemService.getSumCategories());
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<ItemDto>> searchItems(
             @RequestParam(name="minPrice", defaultValue = "0") BigDecimal minPrice,
             @RequestParam(name="category", required=false) String category
     ) {
         return ResponseEntity.ok(itemService.searchItems(minPrice, category));
+    }
+
+    @PostMapping("/filterByCategories")
+    public ResponseEntity<List<ItemDto>> filterByCategories(@RequestBody List<String> categories) {
+        return ResponseEntity.ok(itemService.filterByCategories(categories));
     }
 
     @GetMapping("/{id}")

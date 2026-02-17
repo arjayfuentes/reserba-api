@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +54,39 @@ public class ItemService {
                 .filter(item -> category.equals(item.getCategory()))
                 .map(Item::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+//        return items.stream()
+//                .filter(item -> category.equals(item.getCategory()))
+//                .mapToDouble(Item::getPrice)
+//                .sum();
+    }
+
+    public List<ItemDto> filterByCategories(List<String> categories) {
+        List<Item> items = itemRepository.findAll();
+
+        return items.stream()
+                .filter(item -> categories.contains(item.getCategory()))
+                .map(itemFiltered -> new ItemDto(
+                        itemFiltered.getId().toString(),
+                        itemFiltered.getName(),
+                        itemFiltered.getDescription(),
+                        itemFiltered.getPrice(),
+                        itemFiltered.getImageUrl()
+                )).toList();
+    }
+
+    public Map<String, BigDecimal> getSumCategories() {
+        List<Item> items = itemRepository.findAll();
+        Map<String, BigDecimal> totals = items.stream()
+                .collect(Collectors.groupingBy(
+                       Item::getCategory,
+                       Collectors.reducing(
+                               BigDecimal.ZERO,
+                               Item::getPrice,
+                               BigDecimal::add
+                       )
+                       // Collectors.summingDouble(Product::getPrice)  // if double
+                ));
+        return totals;
     }
 
     public ItemDto saveItem(ItemDto itemDto) {
