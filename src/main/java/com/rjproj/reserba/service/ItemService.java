@@ -1,10 +1,13 @@
 package com.rjproj.reserba.service;
 
 import com.rjproj.reserba.dto.ItemDto;
+import com.rjproj.reserba.exception.ItemNotFoundException;
 import com.rjproj.reserba.model.Item;
 import com.rjproj.reserba.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -53,20 +56,14 @@ public class ItemService {
 
     public ItemDto getItem(UUID id) {
         Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Item does not exist " + id));
+                .orElseThrow(() -> new ItemNotFoundException(id));
 
-        return new ItemDto(
-                item.getId().toString(),
-                item.getName(),
-                item.getDescription(),
-                item.getPrice(),
-                item.getImageUrl()
-        );
+        return mapToDto(item);
     }
 
     public ItemDto updateItem(UUID id, ItemDto itemDto) {
         Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("item does not exist" + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"item does not exist" + id));
 
         Item updatedItem = new Item(
                 item.getId(),
@@ -90,7 +87,7 @@ public class ItemService {
 
     public void deleteItem(UUID id) {
         Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("You cannot delete unexisting item " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"You cannot delete unexisting item " + id));
         itemRepository.delete(item);
     }
 
@@ -145,13 +142,7 @@ public class ItemService {
         List<Item> items = itemRepository.findByNameContainingIgnoreCase(name);
 
         return items.stream()
-                .map(item -> new ItemDto(
-                        item.getId().toString(),
-                        item.getName(),
-                        item.getDescription(),
-                        item.getPrice(),
-                        item.getImageUrl()
-                )).toList();
+                .map(this::mapToDto).toList();
 
     }
 
@@ -166,6 +157,16 @@ public class ItemService {
                         item.getPrice(),
                         item.getImageUrl()
                 )).toList();
+    }
+
+    private ItemDto mapToDto(Item item) {
+        return new ItemDto(
+                item.getId().toString(),
+                item.getName(),
+                item.getDescription(),
+                item.getPrice(),
+                item.getImageUrl()
+        );
     }
 
 }

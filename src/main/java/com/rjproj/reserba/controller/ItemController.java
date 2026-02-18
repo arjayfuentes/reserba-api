@@ -3,6 +3,7 @@ package com.rjproj.reserba.controller;
 import com.rjproj.reserba.dto.ItemDto;
 import com.rjproj.reserba.service.ItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +22,16 @@ public class ItemController {
 
     @PostMapping
     public ResponseEntity<ItemDto> saveItem(@RequestBody ItemDto itemDto) {
-        return ResponseEntity.status(201).body(itemService.saveItem(itemDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(itemService.saveItem(itemDto));
     }
+
+    // NEW WAY
+    @PostMapping("/saveItemNewWay")
+    @ResponseStatus(HttpStatus.CREATED) // Returns 201 instead of 200
+    public ItemDto saveItemNewWay(@RequestBody ItemDto itemDto) {
+        return itemService.saveItem(itemDto);
+    }
+
 
     @GetMapping
     public ResponseEntity<List<ItemDto>> getItems() {
